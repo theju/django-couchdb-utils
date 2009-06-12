@@ -18,7 +18,7 @@ a try):
 * `Cache backend`_
 * Admin backend
 * Database backend
-and anything else I forgot but you might love to use...
+* and anything else I forgot but you might love to use...
 
 Please do leave your feedback if you found the project worthless
 or useful (by any chance).
