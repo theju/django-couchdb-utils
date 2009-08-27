@@ -11,9 +11,8 @@ class CouchDBAuthBackend(object):
 
     def __init__(self):
         server  = Server(getattr(settings, 'COUCHDB_HOST'))
-        self.db = server['auth']
         try:
-            self.db.info()
+            self.db = server['auth']
         except ResourceNotFound:
             server.create('auth')
 
