@@ -8,9 +8,8 @@ from django.contrib.sessions.backends.base import SessionBase, CreateError
 class SessionStore(SessionBase):
     def __init__(self, session_key=None):
         server = Server(getattr(settings,'COUCHDB_HOST'))
-        self.db = server['session']
         try:
-            self.db.info()
+            self.db = server['session']
         except ResourceNotFound:
             # Create the db and views.
             self.db = server.create('session')
