@@ -10,12 +10,12 @@ Currently it has a moderately tested:
 
 * `Auth backend`_
 * `Session backend`_
+* `Cache backend`_
 
 In the future, I plan to work on (no guarantees that I might
 have a success on the one's listed below, but they are worth
 a try):
 
-* `Cache backend`_
 * Admin backend
 * Database backend
 * and anything else I forgot but you might love to use...
