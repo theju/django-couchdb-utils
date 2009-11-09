@@ -1,5 +1,7 @@
-from couchdb.schema import *
+from auth import get_or_create
 from couchdb import Server
+from couchdb.schema import *
+from couchdb.schema import View
 from django.conf import settings
 from couchdb.client import ResourceNotFound
 from django.contrib.auth.models import get_hexdigest, check_password, UNUSABLE_PASSWORD
@@ -16,14 +18,20 @@ class User(Document):
     last_login    = DateTimeField()
     date_joined   = DateTimeField()
 
+    id_view        = View('auth_id', 
+                          '''function (doc) { emit(doc.id, doc); }''',
+                          name='all')
+    email_view     = View('auth_email', 
+                          '''function (doc) { emit(doc.email, doc); }''',
+                          name='all')
+    is_active_view = View('auth_is_active', 
+                          '''function (doc) { emit(doc.is_active, doc); }''',
+                          name='all')
+
     def __init__(self, id=None, **values):
         super(User, self).__init__(id, **values)
-        server  = Server(getattr(settings, 'COUCHDB_HOST'))
-        self.db = server['auth']
-        try:
-            self.db.info()
-        except ResourceNotFound:
-            server.create('auth')
+        server_uri = getattr(settings, 'COUCHDB_HOST'))
+        self.db = get_or_create(server_uri, "auth")
         self.set_password(self.password)
 
     def __unicode__(self):
@@ -41,7 +49,7 @@ class User(Document):
         return full_name.strip()
 
     def save(self):
-        self.store(self.db)
+        return self.store(self.db)
 
     def is_authenticated(self):
         return True
@@ -76,5 +84,5 @@ class User(Document):
         send_mail(subject, message, from_email, [self.email])
 
     def get_and_delete_messages(self):
-        # Todo: Implement messaging
+        # Todo: Implement messaging and groups.
         return None
