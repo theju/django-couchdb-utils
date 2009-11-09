@@ -11,6 +11,7 @@ Currently it has a moderately tested:
 * `Auth backend`_
 * `Session backend`_
 * `Cache backend`_
+* OpenID consumer using CouchDB_ store (requires `django_openid`_)
 
 In the future, I plan to work on (no guarantees that I might
 have a success on the one's listed below, but they are worth
@@ -27,3 +28,4 @@ or useful (by any chance).
 .. _`Auth backend`: http://docs.djangoproject.com/en/dev/topics/auth/#other-authentication-sources
 .. _`Session backend`: http://docs.djangoproject.com/en/dev/topics/http/sessions/#configuring-the-session-engine
 .. _`Cache backend`: http://docs.djangoproject.com/en/dev/topics/cache/#using-a-custom-cache-backend
+.. _`django_openid`: http://github.com/simonw/django-openid/master/tree
