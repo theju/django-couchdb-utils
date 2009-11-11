@@ -1,4 +1,3 @@
-from auth.models import User
 from django.conf import settings
 import datetime, couchdb, urlparse
 from couchdb.client import PreconditionFailed
@@ -19,6 +18,7 @@ def get_or_create(server_uri, db_name):
     return db
 
 def login(request, user):
+    from auth.models import User
     if user is None:
         user = request.user
     # TODO: It would be nice to support different login methods, like signed cookies.
