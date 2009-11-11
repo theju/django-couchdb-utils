@@ -32,7 +32,7 @@ class User(Document):
 
     def __init__(self, id=None, **values):
         super(User, self).__init__(id, **values)
-        server_uri = getattr(settings, 'COUCHDB_HOST'))
+        server_uri = getattr(settings, 'COUCHDB_HOST')
         self.db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "auth"))
         self.set_password(self.password)
 
