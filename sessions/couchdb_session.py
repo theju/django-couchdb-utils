@@ -5,14 +5,16 @@ from couchdb.client import ResourceNotFound
 from django.core.exceptions import SuspiciousOperation
 from django.contrib.sessions.backends.base import SessionBase, CreateError
 
+DB_PREFIX = getattr(settings, "COUCHDB_SESSION_PREFIX", "")
+
 class SessionStore(SessionBase):
     def __init__(self, session_key=None):
         server = Server(getattr(settings,'COUCHDB_HOST'))
         try:
-            self.db = server['session']
+            self.db = server["%s%s" %(DB_PREFIX, 'session')]
         except ResourceNotFound:
             # Create the db and views.
-            self.db = server.create('session')
+            self.db = server.create("%s%s" %(DB_PREFIX, 'session'))
         super(SessionStore, self).__init__(session_key)
 
     def create(self):
