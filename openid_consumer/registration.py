@@ -3,7 +3,7 @@ from django_openid import signed
 from django.conf import settings
 from openid_consumer.consumer import AuthConsumer
 from openid_consumer.forms import RegistrationFormPasswordConfirm
-from openid_consumer.models import server_uri, openid_db_uri, get_values, get_or_create
+from openid_consumer.models import server_uri, DB_PREFIX, get_values, get_or_create
 from django_openid.registration import RegistrationConsumer as DjangoOpenIDRegistrationConsumer
 
 class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
@@ -31,7 +31,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         # Set OpenID, if one has been associated
         if openid:
             from openid_consumer.models import UserOpenidAssociation
-            temp_db = get_or_create(server_uri, 'user_openid')
+            temp_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, 'user_openid'))
             uoa = UserOpenidAssociation(user_id = user.id, 
                                         openid  = openid, 
                                         created = datetime.now())
