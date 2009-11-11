@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from django.utils.encoding import smart_unicode, smart_str
 from django.core.cache.backends.base import BaseCache, InvalidCacheBackendError
 
+DB_PREFIX = getattr(settings, "COUCHDB_CACHE_PREFIX", "")
+
 try:
     import couchdb
 except ImportError:
@@ -17,9 +19,9 @@ class CacheClass(BaseCache):
         BaseCache.__init__(self, params)
         server = couchdb.Server(server or getattr(settings, 'COUCHDB_HOST'))
         try:
-            self._cache = server['cache']
+            self._cache = server["%s%s" %(DB_PREFIX, 'cache')]
         except couchdb.ResourceNotFound:
-            self._cache = server.create('cache')            
+            self._cache = server.create("%s%s" %(DB_PREFIX, 'cache'))
             CacheRow.get_keys.sync(self._cache)
 
     def add(self, key, value, timeout=0):
