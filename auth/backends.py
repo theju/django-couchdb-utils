@@ -1,5 +1,5 @@
 from couchdb import Server
-from auth.models import User
+from auth.models import User, DB_PREFIX
 from django.conf import settings
 from couchdb.client import ResourceNotFound
 from django.contrib.auth.models import get_hexdigest, check_password
@@ -12,9 +12,9 @@ class CouchDBAuthBackend(object):
     def __init__(self):
         server  = Server(getattr(settings, 'COUCHDB_HOST'))
         try:
-            self.db = server['auth']
+            self.db = server["%s%s" %(DB_PREFIX, 'auth')]
         except ResourceNotFound:
-            server.create('auth')
+            server.create("%s%s" %(DB_PREFIX, 'auth'))
 
     def authenticate(self, username=None, password=None):
         user = User.load(self.db, username)
