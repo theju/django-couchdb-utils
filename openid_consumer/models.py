@@ -10,7 +10,8 @@ from openid.association import Association as OIDAssociation
 
 DEFAULT_COUCHDB_HOST = "http://127.0.0.1:5984"
 server_uri           = getattr(settings, 'COUCHDB_HOST', DEFAULT_COUCHDB_HOST)
-openid_db_uri        = getattr(settings, 'COUCHDB_OPENID_DB', 'openid')
+DB_PREFIX            = getattr(settings, 'COUCHDB_OPENID_PREFIX', '')
+openid_db_uri        = getattr(settings, 'COUCHDB_OPENID_DB', '%s%s' %(DB_PREFIX, 'openid'))
 
 def get_or_create(server_uri, db_name):
     server = Server(server_uri)
