@@ -1,11 +1,11 @@
 from django import forms
-from auth.models import User
+from auth.models import User, DB_PREFIX
 from openid_consumer.models import server_uri, get_or_create, get_values
 from django_openid.forms import RegistrationForm as DjangoOpenidRegistrationForm, \
                                 RegistrationFormPasswordConfirm as DjangoOpenidRegistrationFormPasswordConfirm
 
 class RegistrationForm(DjangoOpenidRegistrationForm):
-    auth_db = get_or_create(server_uri, "auth")
+    auth_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "auth"))
 
     def save(self):
         user = User(**self.cleaned_data)
