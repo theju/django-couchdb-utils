@@ -2,7 +2,7 @@ import couchdb, datetime
 from django.conf import settings
 from openid.consumer import consumer
 from django_openid.consumer import signed
-from openid_consumer.models import server_uri, openid_db_uri
+from openid_consumer.models import server_uri, DB_PREFIX
 from django_openid.auth import AuthConsumer as DjangoOpenidAuthConsumer
 # I know this long naming sucks! But couldn't think of anything better...
 from django_openid.consumer import Consumer as DjangoOpenidConsumer, \
@@ -26,7 +26,8 @@ class CookieConsumer(LoginConsumer, DjangoOpenidCookieConsumer):
 
 class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
     def __init__(self):
-        self.auth_db = get_or_create(server_uri, "auth")
+        auth_db_prefix = getattr(settings, "COUCHDB_AUTH_PREFIX", "")
+        self.auth_db = get_or_create(server_uri, "%s%s" %(auth_db_prefix, "auth"))
         super(AuthConsumer, self).__init__()
 
     def user_can_login(self, request, user):
@@ -48,7 +49,7 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
             except signed.BadSignature:
                 return self.show_error(request, self.csrf_failed_message)
             # Associate openid with their account, if it isn't already
-            temp_db = get_or_create(server_uri, "user_openid")
+            temp_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "user_openid"))
             if not len(get_values(temp_db.view('openid_view/all', key = openid))):
                 from openid_consumer.models import UserOpenidAssociation
                 uoa = UserOpenidAssociation(user_id = request.user.id, 
@@ -76,7 +77,7 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
                         message = self.associate_tampering_message
                     else:
                         # It matches! Delete the OpenID relationship
-                        temp_db = get_or_create(server_uri, "user_openid")
+                        temp_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "user_openid"))
                         from openid_consumer.models import UserOpenidAssociation
                         rows = get_values(temp_db.view('openid_view/all', key=todelete['openid']))
                         temp_db.delete(rows[0])
@@ -87,7 +88,7 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
                     message = self.associate_tampering_message
         # We construct a button to delete each existing association
         openids = []
-        temp_db = get_or_create(server_uri, "user_openid")
+        temp_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "user_openid"))
         for association in get_values(temp_db.view('openid_view/all')):
             openids.append({
                 'openid': association['openid'],
@@ -109,7 +110,7 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
 
     def lookup_openid(self, request, identity_url):
         from auth.models import User
-        temp_db = get_or_create(server_uri, "user_openid")
+        temp_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "user_openid"))
         try:
             openid = get_values(temp_db.view('openid_view/all', key=identity_url))[0]
         except IndexError:
