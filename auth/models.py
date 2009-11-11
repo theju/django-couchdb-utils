@@ -6,6 +6,8 @@ from django.conf import settings
 from couchdb.client import ResourceNotFound
 from django.contrib.auth.models import get_hexdigest, check_password, UNUSABLE_PASSWORD
 
+DB_PREFIX = getattr(settings, "COUCHDB_AUTH_PREFIX", "")
+
 class User(Document):
     # username == id
     first_name    = TextField()
@@ -31,7 +33,7 @@ class User(Document):
     def __init__(self, id=None, **values):
         super(User, self).__init__(id, **values)
         server_uri = getattr(settings, 'COUCHDB_HOST'))
-        self.db = get_or_create(server_uri, "auth")
+        self.db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "auth"))
         self.set_password(self.password)
 
     def __unicode__(self):
