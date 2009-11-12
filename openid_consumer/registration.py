@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.http import Http404
 from django_openid import signed
 from django.conf import settings
 from openid_consumer.consumer import AuthConsumer
