@@ -1,3 +1,4 @@
+from auth.models import User
 from couchdb.schema import *
 from couchdb.schema import View
 from django.conf import settings
@@ -28,22 +29,14 @@ def get_values(db_view_result):
     return [i['value'] for i in db_view_result.rows]
 
 
-def couch_auth_models_available():
-    auth_backends = getattr(settings, 'AUTHENTICATION_BACKENDS', None)
-    # Slightly hackish. Hopefully it will be refactored soon
-    if auth_backends and [i for i in auth_backends if 'backends.CouchDBAuthBackend' in i]:
-        return True
+class UserOpenidAssociation(Document):
+    user_id = TextField()
+    openid  = TextField()
+    created = DateTimeField()
 
-if couch_auth_models_available():
-    from auth.models import User
-    class UserOpenidAssociation(Document):
-        user_id = TextField()
-        openid  = TextField()
-        created = DateTimeField()
-
-        openid_view = View('openid_view',
-                           '''function (doc) { emit(doc.openid, doc); }''',
-                           name='all')
+    openid_view = View('openid_view',
+                       '''function (doc) { emit(doc.openid, doc); }''',
+                       name='all')
 
 class Nonce(Document):
     server_url = TextField()
@@ -82,9 +75,8 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
         # instance
         self.nonce_db = get_or_create(server_uri, "%s_nonce" %openid_db_uri)
         self.assoc_db = get_or_create(server_uri, "%s_assoc" %openid_db_uri)
-        if couch_auth_models_available():
-            self.user_openid_db = get_or_create(server_uri, "%s_%s" %(DB_PREFIX, "user_openid"))
-            UserOpenidAssociation.openid_view.sync(self.user_openid_db)
+        self.user_openid_db = get_or_create(server_uri, "%s_%s" %(DB_PREFIX, "user_openid"))
+        UserOpenidAssociation.openid_view.sync(self.user_openid_db)
         Nonce.timestamp_view.sync(self.nonce_db)
         Nonce.url_timestamp_salt_view.sync(self.nonce_db)
         Association.url_handle_view.sync(self.assoc_db)
