@@ -83,7 +83,7 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
         self.nonce_db = get_or_create(server_uri, "%s_nonce" %openid_db_uri)
         self.assoc_db = get_or_create(server_uri, "%s_assoc" %openid_db_uri)
         if couch_auth_models_available():
-            self.user_openid_db = get_or_create(server_uri, "user_openid")
+            self.user_openid_db = get_or_create(server_uri, "%s_%s" %(DB_PREFIX, "user_openid"))
             UserOpenidAssociation.openid_view.sync(self.user_openid_db)
         Nonce.timestamp_view.sync(self.nonce_db)
         Nonce.url_timestamp_salt_view.sync(self.nonce_db)
