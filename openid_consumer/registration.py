@@ -82,3 +82,34 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
             'form': form,
             'action': request.path,
         })
+
+    def do_c(self, request, token = ''):
+        if not token:
+            # TODO: show a form where they can paste in their token?
+            raise Http404
+        token = token.rstrip('/').encode('utf8')
+        try:
+            value = signed.unsign(token, key = (
+                self.confirm_link_secret or settings.SECRET_KEY
+            ) + self.confirm_link_salt)
+        except signed.BadSignature:
+            return self.show_message(
+                request, self.invalid_token_message,
+                self.invalid_token_message + ': ' + token
+            )
+        # Only line change compared with django-openid
+        user_id = value
+        user = self.lookup_user_by_id(user_id)
+        if not user: # Maybe the user was deleted?
+            return self.show_error(request, r_user_not_found_message)
+
+        # Check user is NOT active but IS in the correct group
+        if self.user_is_unconfirmed(user):
+            # Confirm them
+            user.is_active = True
+            user.save()
+            self.mark_user_confirmed(user)
+            self.log_in_user(request, user)
+            return self.on_registration_complete(request)
+        else:
+            return self.show_error(request, self.c_already_confirmed_message)
