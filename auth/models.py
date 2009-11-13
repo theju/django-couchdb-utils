@@ -21,7 +21,7 @@ class User(Document):
     date_joined   = DateTimeField()
 
     id_view        = View('auth_id', 
-                          '''function (doc) { emit(doc.id, doc); }''',
+                          '''function (doc) { emit(doc._id, doc); }''',
                           name='all')
     email_view     = View('auth_email', 
                           '''function (doc) { emit(doc.email, doc); }''',
