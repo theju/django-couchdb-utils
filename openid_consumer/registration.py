@@ -16,7 +16,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
 
     def mark_user_confirmed(self, user):
         user.is_active = True
-        return user
+        return user.store(self.auth_db)
 
     def mark_user_unconfirmed(self, user):
         user.is_active = False
