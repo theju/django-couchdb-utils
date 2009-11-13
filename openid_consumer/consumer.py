@@ -127,4 +127,4 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
             return None
 
     def lookup_user_by_id(self, id):
-        return lookup_by_username(id)
+        return self.lookup_by_username(id)
