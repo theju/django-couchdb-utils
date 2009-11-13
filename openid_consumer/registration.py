@@ -100,15 +100,16 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
             )
         # Only line change compared with django-openid
         user_id = value
-        user = self.lookup_user_by_id(user_id)[0]
-        if not user: # Maybe the user was deleted?
+        try:
+            user = self.lookup_user_by_id(user_id)[0]
+        except IndexError: # Maybe the user was deleted?
             return self.show_error(request, self.r_user_not_found_message)
 
         # Check user is NOT active but IS in the correct group
         if self.user_is_unconfirmed(user):
             # Confirm them
             user['is_active'] = True
-            User(**user).store(self.auth_db)
+            user = User(**user).store(self.auth_db)
             self.mark_user_confirmed(user)
             self.log_in_user(request, user)
             return self.on_registration_complete(request)
