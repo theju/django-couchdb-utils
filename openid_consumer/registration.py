@@ -108,8 +108,8 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         # Check user is NOT active but IS in the correct group
         if self.user_is_unconfirmed(user):
             # Confirm them
-            user['is_active'] = True
-            user = User(**user).store(self.auth_db)
+            user = User.load(self.auth_db, user['_id'])
+            user.is_active = True
             self.mark_user_confirmed(user)
             self.log_in_user(request, user)
             return self.on_registration_complete(request)
