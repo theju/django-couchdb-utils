@@ -102,7 +102,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         user_id = value
         user = self.lookup_user_by_id(user_id)
         if not user: # Maybe the user was deleted?
-            return self.show_error(request, r_user_not_found_message)
+            return self.show_error(request, self.r_user_not_found_message)
 
         # Check user is NOT active but IS in the correct group
         if self.user_is_unconfirmed(user):
