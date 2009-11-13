@@ -22,7 +22,7 @@ def login(request, user):
     if user is None:
         user = request.user
     # TODO: It would be nice to support different login methods, like signed cookies.
-    backend = user.get('backend', getattr(settings, 'AUTHENTICATION_BACKENDS'))
+    backend = getattr(user, 'backend', getattr(settings, 'AUTHENTICATION_BACKENDS'))
     server_uri = getattr(settings, 'COUCHDB_HOST', DEFAULT_COUCHDB_HOST)
     auth_db = get_or_create(server_uri, "%sauth" %DB_PREFIX)
     user = User.load(auth_db, user.id)
