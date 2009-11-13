@@ -1,3 +1,4 @@
+from auth.models import User
 from datetime import datetime
 from django.http import Http404
 from django_openid import signed
@@ -21,7 +22,6 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         user.store(self.auth_db)
 
     def create_user(self, request, data, openid=None):
-        from auth.models import User
         user = User(
             id = data['username'],
             first_name = data.get('first_name', ''),
