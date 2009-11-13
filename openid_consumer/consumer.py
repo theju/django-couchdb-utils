@@ -36,7 +36,7 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
 
     def log_in_user(self, request, user):
         from auth import login
-        user['backend'] = 'auth.backends.CouchDBAuthBackend'
+        user.backend = 'auth.backends.CouchDBAuthBackend'
         login(request, user)
 
     def do_associate(self, request):
