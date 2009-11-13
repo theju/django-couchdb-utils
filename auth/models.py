@@ -27,7 +27,7 @@ class User(Document):
                           '''function (doc) { emit(doc.email, doc); }''',
                           name='all')
     is_active_view = View('auth_is_active', 
-                          '''function (doc) { emit(doc.is_active, doc); }''',
+                          '''function (doc) { emit([doc._id, doc.is_active], doc); }''',
                           name='all')
 
     def __init__(self, id=None, **values):
