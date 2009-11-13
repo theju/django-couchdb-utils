@@ -11,7 +11,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
     RegistrationForm   = RegistrationFormPasswordConfirm
 
     def user_is_unconfirmed(self, user):
-        return len(get_values(self.auth.db.view('auth_active/all', key=[])))
+        return len(get_values(self.auth_db.view('auth_active/all', key=[])))
 
     def mark_user_confirmed(self, user):
         self.auth_db.delete(user)
