@@ -114,3 +114,5 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
             return self.on_registration_complete(request)
         else:
             return self.show_error(request, self.c_already_confirmed_message)
+
+    do_c.urlregex = '^c/([^/]+)/$'
