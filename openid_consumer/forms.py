@@ -7,7 +7,7 @@ from django_openid.forms import RegistrationForm as DjangoOpenidRegistrationForm
 class RegistrationForm(DjangoOpenidRegistrationForm):
     def __init__(self, *args, **kwargs):
         super(RegistrationForm, self).__init__(*args, **kwargs)
-        auth_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "auth"))
+        self.auth_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "auth"))
         User.id_view.sync(auth_db)
         User.email_view.sync(auth_db)
         User.is_active_view.sync(auth_db)
