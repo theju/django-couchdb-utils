@@ -18,13 +18,13 @@ def get_or_create(server_uri, db_name):
     return db
 
 def login(request, user):
-    from auth.models import User
+    from auth.models import User, DB_PREFIX
     if user is None:
         user = request.user
     # TODO: It would be nice to support different login methods, like signed cookies.
     backend = getattr(user, 'backend', getattr(settings, 'AUTHENTICATION_BACKENDS'))
     server_uri = getattr(settings, 'COUCHDB_HOST', DEFAULT_COUCHDB_HOST)
-    auth_db = get_or_create(server_uri, "auth")
+    auth_db = get_or_create(server_uri, "%sauth" %DB_PREFIX)
     user = User.load(auth_db, user.id)
     user.last_login = datetime.datetime.now()
     user.store(auth_db)
