@@ -15,7 +15,8 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         return len(get_values(self.auth_db.view('auth_is_active/all', key=[user['_id'], False])))
 
     def mark_user_confirmed(self, user):
-        self.auth_db.delete(user)
+        user.is_active = True
+        return user
 
     def mark_user_unconfirmed(self, user):
         user.is_active = False
@@ -109,7 +110,6 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         if self.user_is_unconfirmed(user):
             # Confirm them
             user = User.load(self.auth_db, user['_id'])
-            user.is_active = True
             self.mark_user_confirmed(user)
             self.log_in_user(request, user)
             return self.on_registration_complete(request)
