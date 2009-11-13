@@ -11,7 +11,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
     RegistrationForm   = RegistrationFormPasswordConfirm
 
     def user_is_unconfirmed(self, user):
-        return len(get_values(self.auth_db.view('auth_is_active/all', key=[user[0]['_id'], False])))
+        return len(get_values(self.auth_db.view('auth_is_active/all', key=[user['_id'], False])))
 
     def mark_user_confirmed(self, user):
         self.auth_db.delete(user)
@@ -100,15 +100,15 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
             )
         # Only line change compared with django-openid
         user_id = value
-        user = self.lookup_user_by_id(user_id)
+        user = self.lookup_user_by_id(user_id)[0]
         if not user: # Maybe the user was deleted?
             return self.show_error(request, self.r_user_not_found_message)
 
         # Check user is NOT active but IS in the correct group
         if self.user_is_unconfirmed(user):
             # Confirm them
-            user.is_active = True
-            user.save()
+            user['is_active'] = True
+            User(**user).store(self.auth_db)
             self.mark_user_confirmed(user)
             self.log_in_user(request, user)
             return self.on_registration_complete(request)
