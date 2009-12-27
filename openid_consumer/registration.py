@@ -62,7 +62,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         return nickname
 
     def generate_confirm_code(self, user):
-        return signed.sign(user.id, key = (
+        return signed.sign(str(user.id), key = (
             self.confirm_link_secret or settings.SECRET_KEY
         ) + self.confirm_link_salt)
 
