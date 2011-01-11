@@ -2,16 +2,19 @@
 INSTALL
 ========
 
-* Reference the ``auth`` app into your ``INSTALLED_APPS`` in ``settings.py``.
+* Install Couchdbkit from http://couchdbkit.org/
+* Reference both ``couchdbkit`` and ``auth`` in your ``INSTALLED_APPS`` in ``settings.py``.
 * Add the ``AUTHENTICATION_BACKENDS`` attribute in ``settings.py`` like::
 
     AUTHENTICATION_BACKENDS = ('auth.backends.CouchDBAuthBackend',)
 
-* Add ``COUCHDB_HOST`` attribute to ``settings.py``::
+* To the COUCHDB_DATABASES (which is used by Couchdbkit) add::
 
-    COUCHDB_HOST = "http://localhost:5984/"
+    ('yourapp.auth', 'http://127.0.0.1:5984/auth'),
 
-* [[ Optional ]] If you plan to host multiple auth databases (say, of multiple 
-  django apps) of a single CouchDB instance, then add a unique prefix::
+  If your do not use Couchdbkit otherwise, just add the following to your ``settings.py``::
 
-    COUCHDB_AUTH_PREFIX = "site1_"
+    COUCHDB_DATABASES = (
+      ('authttest.auth', 'http://127.0.0.1:5984/auth'),
+    )
+

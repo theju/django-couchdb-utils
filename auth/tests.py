@@ -1,6 +1,6 @@
 BASIC_TESTS = """
 >>> from auth.models import User
->>> u = User(id='testuser', email='test@example.com', password='testpw')
+>>> u = User(username='testuser', email='test@example.com', password='testpw')
 >>> u.save()
 >>> u.has_usable_password()
 True
