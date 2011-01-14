@@ -38,6 +38,11 @@ class User(Document):
             return True
         return u._id == self._id
 
+    def _get_id(self):
+        return self.username
+
+    id = property(_get_id)
+
     def get_full_name(self):
         "Returns the first_name plus the last_name, with a space in between."
         full_name = u'%s %s' % (self.first_name, self.last_name)
