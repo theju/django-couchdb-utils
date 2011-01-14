@@ -2,16 +2,21 @@
 INSTALL
 ========
 
+
 * Reference the ``sessions`` app into your ``INSTALLED_APPS`` in ``settings.py``.
 * Add the ``SESSION_ENGINE`` attribute in ``settings.py`` like::
 
     SESSION_ENGINE = "sessions.couchdb_session"
 
-* Add ``COUCHDB_HOST`` attribute to ``settings.py``::
+* To the COUCHDB_DATABASES (which is used by Couchdbkit) add::
 
-    COUCHDB_HOST = "http://localhost:5984/"
+    ('yourapp.sessions', 'http://127.0.0.1:5984/somedb'),
 
-* [[ Optional ]] If you plan to host multiple session databases (say, of multiple 
-  django apps) of a single CouchDB instance, then add a unique prefix::
+  If your do not use Couchdbkit otherwise, just add the following to your ``settings.py``::
 
-    COUCHDB_SESSION_PREFIX = "site1_"
+    COUCHDB_DATABASES = (
+      ('yourapp.sessions', 'http://127.0.0.1:5984/somedb'),
+    )
+
+  As the library doesn't make any assumptions about the Ids of the CouchDB
+  objects it stores, it is safe to use it with an already existing database.

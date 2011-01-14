@@ -9,19 +9,10 @@ Currently it has a moderately tested:
 
 * `Auth backend`_
 * `Session backend`_
-* `Cache backend`_
-* OpenID consumer using CouchDB_ store (requires `django_openid`_)
+* `Cache backend`_ (not yet modified to work with Couchdbkit)
+* OpenID consumer using CouchDB_ store (requires `django_openid`_, also not yet modified to work with Couchdbkit)
 
-In the future, I plan to work on (no guarantees that I might
-have a success on the one's listed below, but they are worth
-a try):
-
-* Admin backend
-* Database backend
-* and anything else I forgot but you might love to use...
-
-Please do leave your feedback if you found the project worthless
-or useful (by any chance).
+To use this library, install Couchdbkit and reference it in your INSTALLED_APPS in settings.py
 
 .. _`CouchDB`: http://couchdb.apache.org/
 .. _`Couchdbkit`: http://couchdbkit.org/
