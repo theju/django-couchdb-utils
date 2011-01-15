@@ -1,8 +1,8 @@
 from datetime import datetime
-
+from django.conf import settings
 from django.contrib.auth.models import get_hexdigest, check_password, UNUSABLE_PASSWORD
-
 from couchdbkit.ext.django.schema import *
+
 
 class User(Document):
     username      = StringProperty(required=True)
@@ -88,5 +88,31 @@ class User(Document):
         else:
             param = dict(key=[username, is_active])
 
-        r = cls.view('auth/by_username', include_docs=True, **param)
+        r = cls.view('djang_utils/users_by_username', include_docs=True, **param)
         return r.first() if r else None
+
+class CouchDBAuthBackend(object):
+    # Create a User object if not exists.
+    # Subclasses must override this attribute.
+    create_unknown_user = False
+
+    def authenticate(self, username=None, password=None):
+        user = User.get_user(username)
+        if user and check_password(password, user.password):
+            return user
+        if not user:
+            if self.create_unknown_user:
+                user = User(username)
+                user.set_password(password)
+                user.save()
+                return user
+            else:
+                return None
+
+    def get_user(self, username):
+        user = User.get_user(username)
+        if not user:
+            raise KeyError
+        return user
+
+
