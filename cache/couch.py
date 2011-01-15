@@ -7,35 +7,27 @@ from datetime import datetime, timedelta
 from django.utils.encoding import smart_unicode, smart_str
 from django.core.cache.backends.base import BaseCache, InvalidCacheBackendError
 
-DB_PREFIX = getattr(settings, "COUCHDB_CACHE_PREFIX", "")
-
-try:
-    import couchdb
-except ImportError:
-    raise InvalidCacheBackendError("CouchDB cache backend requires the 'couchdb-python' library")
 
 class CacheClass(BaseCache):
-    def __init__(self, server, params):
-        BaseCache.__init__(self, params)
-        server = couchdb.Server(server or getattr(settings, 'COUCHDB_HOST'))
-        try:
-            self._cache = server["%s%s" %(DB_PREFIX, 'cache')]
-        except couchdb.ResourceNotFound:
-            self._cache = server.create("%s%s" %(DB_PREFIX, 'cache'))
-            CacheRow.get_keys.sync(self._cache)
 
     def add(self, key, value, timeout=0):
         if isinstance(value, unicode):
             value = value.encode('utf-8')
         timeout_secs = timeout or self.default_timeout
         expire_time = datetime.now() + timedelta(seconds = timeout_secs)
-        return CacheRow(id=key, value=value, expires = expire_time).store(self._cache)
+
+        row = CacheRow()
+        row.key = key
+        row.value = value
+        row.expires=expire_time
+        row.save()
+        return row
 
     def get(self, key, default=None):
-        val = CacheRow.load(self._cache, smart_str(key))
+        val = CacheRow.get_row(smart_str(key))
         if not val:
             return default
-        if val['expires'] > datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'):
+        if val.expires > datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'):
             if isinstance(val, basestring):
                 return smart_unicode(val)
             else:
@@ -45,20 +37,25 @@ class CacheClass(BaseCache):
         if isinstance(value, unicode):
             value = value.encode('utf-8')
         expire_time = datetime.now() + timedelta(seconds=timeout)
-        doc = CacheRow.load(self._cache, smart_str(key))
+        doc = CacheRow.get_row(smart_str(key))
         if doc:
             doc._data.update({'value': value, 'expires': expire_time.strftime('%Y-%m-%dT%H:%M:%SZ')})
-            doc.store(self._cache)
+            doc.save()
         else:
-            CacheRow(id=key, value=value, expires=expire_time).store(self._cache)
+            row = CacheRow()
+            row.key = key
+            row.value = value
+            row.expires = expire_time
+            row.save()
 
     def delete(self, key):
-        doc = CacheRow.load(self._cache, key)
+        doc = CacheRow.get_row(key)
         if doc:
-            self._cache.delete(doc)
+            doc.delete()
 
     def get_many(self, keys):
-        return CacheRow.get_keys(self._cache, keys = map(smart_str,keys))
+        keys = map(smart_str, keys)
+        return map(CacheRow.get_row, keys)
 
     def incr(self, key, delta=1):
         if key not in self:
