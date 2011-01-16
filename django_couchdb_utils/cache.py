@@ -13,7 +13,7 @@ class CacheRow(Document):
 
     @classmethod
     def get_row(cls, key):
-        r = cls.view('django_utils/cache_by_key', key=key, include_docs=True)
+        r = cls.view('django_couchdb_utils/cache_by_key', key=key, include_docs=True)
         return r.first() if r else None
 
     def _get_id(self):
