@@ -91,6 +91,21 @@ class User(Document):
         r = cls.view('django_couchdb_utils/users_by_username', include_docs=True, **param)
         return r.first() if r else None
 
+    @classmethod
+    def get_user_by_email(cls, email, is_active=True):
+        if is_active is None:
+            param = dict(startkey=[email, False], endkey=[email, True])
+        else:
+            param = dict(key=[email, is_active])
+
+        r = cls.view('django_couchdb_utils/users_by_email', include_docs=True, **param)
+        return r.first() if r else None
+
+    @classmethod
+    def all_users(cls):
+        return cls.view('django_couchdb_utils/users_by_username', include_docs=True).iterator()
+
+
 class CouchDBAuthBackend(object):
     # Create a User object if not exists.
     # Subclasses must override this attribute.
