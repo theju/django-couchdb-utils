@@ -40,25 +40,29 @@ class CouchDBEmailBackend(BaseEmailBackend):
     message in a CouchDB database for a later retry.
     """
 
-    def open(self):
+    def __init__(self, *args, **kwargs):
         wrapped_backend = getattr(settings, 'COUCHDB_EMAIL_BACKEND', DEFAULT_WRAPPED_BACKEND)
         self.backend = mail.get_connection(backend=wrapped_backend)
+        super(CouchDBEmailBackend, self).__init__(*args, **kwargs)
+
+    def open(self):
         self.backend.open()
 
     def close(self):
         self.backend.close()
 
     def send_messages(self, email_messages):
+
         for email in email_messages:
             try:
-                self.backend.send_messages([msg])
+                email.connection = self.backend
+                self.backend.send_messages([email])
             except:
                 self._store_email(email)
+                raise
 
 
     def send_cached_emails(self):
-        self.open()
-
         success, failed = 0, 0
         docs = EmailMessage.all_messages()
         for doc in docs:
@@ -70,7 +74,6 @@ class CouchDBEmailBackend(BaseEmailBackend):
             except:
                 failed += 1
 
-        self.close()
         return success, failed
 
 
