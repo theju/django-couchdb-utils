@@ -59,7 +59,6 @@ class CouchDBEmailBackend(BaseEmailBackend):
                 self.backend.send_messages([email])
             except:
                 self._store_email(email)
-                raise
 
 
     def send_cached_emails(self):
