@@ -56,7 +56,7 @@ General Instructions
 
 * To enable sessions support add the ``SESSION_ENGINE`` attribute in ``settings.py`` like::
 
-      SESSION_ENGINE = "django_couchdb_utils.sessions.couchdb_session"
+      SESSION_ENGINE = "django_couchdb_utils.sessions"
 
 * To enable the CouchDB email caching backend, set the ``EMAIL_BACKEND`` attribute in ``settings.py`` like::
 
