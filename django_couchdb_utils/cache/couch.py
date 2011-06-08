@@ -1,26 +1,6 @@
-from time import strptime
-from django.conf import settings
 from datetime import datetime, timedelta
 from django.utils.encoding import smart_unicode, smart_str
 from django.core.cache.backends.base import BaseCache, InvalidCacheBackendError
-from couchdb.ext.django.schema import *
-
-
-class CacheRow(Document):
-    key      = StringProperty()
-    value    = StringProperty()
-    expires  = DateTimeProperty()
-
-    @classmethod
-    def get_row(cls, key):
-        r = cls.view('django_couchdb_utils/cache_by_key', key=key, include_docs=True)
-        return r.first() if r else None
-
-    def _get_id(self):
-        return self.key
-
-    id = property(_get_id)
-
 
 class CacheClass(BaseCache):
 
