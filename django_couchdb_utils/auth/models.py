@@ -1,8 +1,6 @@
 from datetime import datetime
-from django.conf import settings
-from django.contrib.auth.models import get_hexdigest, check_password, UNUSABLE_PASSWORD
 from couchdbkit.ext.django.schema import *
-
+from django.contrib.auth.models import get_hexdigest, check_password, UNUSABLE_PASSWORD
 
 class User(Document):
     username      = StringProperty(required=True)
@@ -104,68 +102,3 @@ class User(Document):
     @classmethod
     def all_users(cls):
         return cls.view('django_couchdb_utils/users_by_username', include_docs=True).iterator()
-
-
-class CouchDBAuthBackend(object):
-    # Create a User object if not exists.
-    # Subclasses must override this attribute.
-    create_unknown_user = False
-
-    def authenticate(self, username=None, password=None):
-        user = User.get_user(username)
-        if user and check_password(password, user.password):
-            return user
-        if not user:
-            if self.create_unknown_user:
-                user = User(username)
-                user.set_password(password)
-                user.save()
-                return user
-            else:
-                return None
-
-    def get_user(self, username):
-        user = User.get_user(username)
-        if not user:
-            raise KeyError
-        return user
-
-
-def migrate_users(
-        get_user_data=lambda _: {},
-        get_profile_data=lambda p: p.__dict__,
-        progress_callback= lambda: None):
-
-    from django.contrib.auth import models
-    users = models.User.objects.all()
-    ATTRIBS = ('username', 'first_name', 'last_name', 'email',
-                'password', 'is_staff', 'is_active', 'is_superuser',
-                'last_login', 'date_joined')
-
-    total = users.count()
-    for n, user in enumerate(users):
-
-        data = user.__dict__
-
-        try:
-            profile = user.get_profile()
-            data.update(get_profile_data(profile))
-        except:
-            pass
-
-        data.update(get_user_data(user))
-
-        # filter private variables
-        data = dict( (k, v) for (k, v) in data.items() if not k.startswith('_') and k != 'user_id')
-
-        new_user = User.get_user(data['username']) or User()
-
-        for attrib, val in data.items():
-            if attrib == 'id':
-                continue
-
-            setattr(new_user, attrib, val)
-
-        new_user.save()
-
-        progress_callback(n, total)
