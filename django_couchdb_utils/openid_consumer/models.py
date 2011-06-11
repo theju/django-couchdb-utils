@@ -1,87 +1,45 @@
-from auth.models import User
-from couchdb.schema import *
-from couchdb.schema import View
 from django.conf import settings
-from couchdb import Server, Database
+from couchdbkit.ext.django.schema import *
 import time, base64, openid.store, urlparse
-from couchdb.client import PreconditionFailed
 from django_openid.models import DjangoOpenIDStore
 from django.utils.hashcompat import md5_constructor
 from openid.association import Association as OIDAssociation
 
-DEFAULT_COUCHDB_HOST = "http://127.0.0.1:5984"
-server_uri           = getattr(settings, 'COUCHDB_HOST', DEFAULT_COUCHDB_HOST)
-DB_PREFIX            = getattr(settings, 'COUCHDB_OPENID_PREFIX', '')
-openid_db_uri        = getattr(settings, 'COUCHDB_OPENID_DB', '%s%s' %(DB_PREFIX, 'openid'))
-
-def get_or_create(server_uri, db_name):
-    server = Server(server_uri)
-    try:
-        db = server.create(db_name)
-    except PreconditionFailed, e:
-        if not e.message[0] == 'file_exists':
-            raise e
-        # Database seems to exist. Let's just use it
-        db = Database(urlparse.urljoin(server_uri, db_name))
-    return db
-
-def get_values(db_view_result):
-    return [i['value'] for i in db_view_result.rows]
-
-
 class UserOpenidAssociation(Document):
-    user_id = TextField()
-    openid  = TextField()
-    created = DateTimeField()
+    user_id = StringProperty()
+    openid  = StringProperty()
+    created = DateTimeProperty()
 
-    openid_view = View('openid_view',
-                       '''function (doc) { emit(doc.openid, doc); }''',
-                       name='all')
+    class Meta:
+        app_label = "django_couchdb_utils_openid_consumer"
 
 class Nonce(Document):
-    server_url = TextField()
-    timestamp  = IntegerField()
-    salt       = TextField()
+    server_url = StringProperty()
+    timestamp  = IntegerProperty()
+    salt       = StringProperty()
 
-    timestamp_view          = View('timestamp_view', 
-                                   '''function (doc) { emit(doc.timestamp, doc); }''', 
-                                   name='all')
-    url_timestamp_salt_view = View('url_timestamp_salt_view',
-                                   '''function (doc) { emit([doc.server_url, doc.timestamp, doc.salt], doc); }''',
-                                   name='all')
+    class Meta:
+        app_label = "django_couchdb_utils_openid_consumer"
 
 class Association(Document):
-    server_url = TextField()
-    handle     = TextField()
-    secret     = TextField() # Stored base64 encoded
-    issued     = IntegerField()
-    lifetime   = IntegerField()
-    assoc_type = TextField()
+    server_url = StringProperty()
+    handle     = StringProperty()
+    secret     = StringProperty() # Stored base64 encoded
+    issued     = IntegerProperty()
+    lifetime   = IntegerProperty()
+    assoc_type = StringProperty()
 
-    url_handle_view      = View('url_handle_view', 
-                                '''function (doc) { emit([doc.server_url, doc.handle], doc); }''',
-                                name='all')
-    url_view             = View('url_view',
-                                '''function (doc) { emit(doc.server_url, doc); }''',
-                                name='all')
-    issued_lifetime_view = View('issued_lifetime_view',
-                                '''function (doc) { emit(doc.issued+doc.lifetime, doc); } ''',
-                                name='all')
+    class Meta:
+        app_label = "django_couchdb_utils_openid_consumer"
 
 class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
     def __init__(self):
         # This constructor argument is specific only to
         # the couchdb store. It accepts a couchdb db 
         # instance
-        self.nonce_db = get_or_create(server_uri, "%s_nonce" %openid_db_uri)
-        self.assoc_db = get_or_create(server_uri, "%s_assoc" %openid_db_uri)
-        self.user_openid_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "user_openid"))
-        UserOpenidAssociation.openid_view.sync(self.user_openid_db)
-        Nonce.timestamp_view.sync(self.nonce_db)
-        Nonce.url_timestamp_salt_view.sync(self.nonce_db)
-        Association.url_handle_view.sync(self.assoc_db)
-        Association.url_view.sync(self.assoc_db)
-        Association.issued_lifetime_view.sync(self.assoc_db)
+        self.nonce_db = Nonce.get_db()
+        self.assoc_db = Association.get_db()
+        self.user_openid_db = UserOpenidAssociation.get_db()
 
     def storeAssociation(self, server_url, association):
         assoc = Association(
@@ -97,9 +55,9 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
     def getAssociation(self, server_url, handle=None):
         assocs = []
         if handle is not None:
-            assocs = get_values(self.assoc_db.view('url_handle_view/all', key=[server_url, handle]))
+            assocs = self.assoc_db.view('url_handle_view/all', key=[server_url, handle])
         else:
-            assocs = get_values(self.assoc_db.view('url_view/all', key=server_url))
+            assocs = self.assoc_db.view('url_view/all', key=server_url)
         if not assocs:
             return None
         associations = []
@@ -109,7 +67,7 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
                 assoc['lifetime'], assoc['assoc_type']
             )
             if association.getExpiresIn() == 0:
-               self.removeAssociation(server_url, assoc.handle)
+                self.removeAssociation(server_url, assoc.handle)
             else:
                 associations.append((association.issued, association))
         if not associations:
@@ -117,7 +75,7 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
         return associations[-1][1]
 
     def removeAssociation(self, server_url, handle):
-        assocs = get_values(self.assoc_db.view('url_handle_view/all', key=[server_url, handle]))
+        assocs = self.assoc_db.view('url_handle_view/all', key=[server_url, handle])
         assocs_exist = len(assocs) > 0
         for assoc in assocs:
             self.assoc_db.delete(assoc)
@@ -128,8 +86,8 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
         if abs(timestamp - time.time()) > openid.store.nonce.SKEW:
             return False
         try:
-            nonce = get_values(self.nonce_db.view('url_timestamp_salt_view/all', 
-                                                  key=[server_url, timestamp, salt]))[0]
+            nonce = self.nonce_db.view('url_timestamp_salt_view/all', 
+                                       key=[server_url, timestamp, salt]).first()
         except IndexError:
             nonce = Nonce(
                 server_url = server_url,
@@ -143,11 +101,11 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
 
     def cleanupNonce(self):
         max_key_val = time.time() - openid.store.nonce.SKEW
-        nonces = get_values(self.nonce_db.view('timestamp_view/all', endkey=max_key_val))
+        nonces = self.nonce_db.view('timestamp_view/all', endkey=max_key_val)
         for nonce in nonces:
             self.nonce_db.delete(nonce)
 
     def cleaupAssociations(self):
-        assocs = get_values(self.assoc_db.view('issued_lifetime_view/all', endkey=time.time()))
+        assocs = self.assoc_db.view('issued_lifetime_view/all', endkey=time.time())
         for assoc in assocs:
             self.assoc_db.delete(assoc)
