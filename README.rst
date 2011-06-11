@@ -31,16 +31,26 @@ INSTALL
 
 General Instructions
 
-* Reference the ``django_couchdb_utils`` app into your ``INSTALLED_APPS`` in ``settings.py``.
+* Reference the ``django_couchdb_utils`` apps into your ``INSTALLED_APPS`` in ``settings.py``::
 
-* To the ``COUCHDB_DATABASES`` (which is used by Couchdbkit) add::
+    ...
+    "django_couchdb_utils.auth",
+    "django_couchdb_utils.sessions",
+    ...
 
-    ('django_couchdb_utils', 'http://127.0.0.1:5984/somedb'),
+  These apps must be placed before their respective default contrib apps in the ``INSTALLED_APPS`` for
+  the correct calculation of the ``app_label``.
+
+* To the ``COUCHDB_DATABASES`` (which is used by Couchdbkit) add the couchdb utils apps that you plan to use::
+
+    ('django_couchdb_utils.auth', 'http://127.0.0.1:5984/somedb'),
+    ...
 
   If your do not use Couchdbkit otherwise, just add the following to your ``settings.py``::
 
     COUCHDB_DATABASES = (
-      ('django_couchdb_utils', 'http://127.0.0.1:5984/somedb'),
+      ('django_couchdb_utils.auth', 'http://127.0.0.1:5984/somedb'),
+      ...
     )
 
   As the library doesn't make any assumptions about the Ids of the CouchDB
