@@ -2,7 +2,6 @@ from datetime import datetime
 from couchdbkit.ext.django.schema import *
 from django.contrib.auth.models import get_hexdigest, check_password, UNUSABLE_PASSWORD
 from django.core.mail import send_mail
-from django.conf import settings
 import random
 
 class User(Document):
@@ -16,6 +15,9 @@ class User(Document):
     is_superuser  = BooleanProperty(default=False)
     last_login    = DateTimeProperty(required=False)
     date_joined   = DateTimeProperty(default=datetime.utcnow)
+
+    class Meta:
+        app_label = "django_couchdb_utils_auth"
 
     def __unicode__(self):
         return self.username
@@ -87,7 +89,8 @@ class User(Document):
         else:
             param = dict(key=[username, is_active])
 
-        r = cls.view('%s/users_by_username' % settings.COUCHDB_UTILS_AUTH_DB, include_docs=True, **param)
+        dbname = cls.get_db().dbname
+        r = cls.view('%s/users_by_username' % dbname, include_docs=True, **param)
         return r.first() if r else None
 
     @classmethod
@@ -97,9 +100,11 @@ class User(Document):
         else:
             param = dict(key=[email, is_active])
 
-        r = cls.view('%s/users_by_email' % settings.COUCHDB_UTILS_AUTH_DB, include_docs=True, **param)
+        dbname = cls.get_db().dbname
+        r = cls.view('%s/users_by_email' % dbname, include_docs=True, **param)
         return r.first() if r else None
 
     @classmethod
     def all_users(cls):
-        return cls.view('%s/users_by_username' % settings.COUCHDB_UTILS_AUTH_DB, include_docs=True).iterator()
+        dbname = cls.get_db().dbname
+        return cls.view('%s/users_by_username' % dbname, include_docs=True).iterator()

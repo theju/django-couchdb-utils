@@ -1,14 +1,17 @@
 from couchdb.ext.django.schema import *
-from django.conf import settings
 
 class CacheRow(Document):
     key      = StringProperty()
     value    = StringProperty()
     expires  = DateTimeProperty()
 
+    class Meta:
+        app_label = "django_couchdb_utils_cache"
+
     @classmethod
     def get_row(cls, key):
-        r = cls.view('%s/cache_by_key' % settings.COUCHDB_UTILS_CACHE_DB, 
+        dbname = cls.get_db().dbname
+        r = cls.view('%s/cache_by_key' % dbname
                      key=key, include_docs=True)
         return r.first() if r else None
 
