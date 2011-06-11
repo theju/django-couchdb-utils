@@ -1,4 +1,5 @@
 from couchdbkit.ext.django.schema import *
+from django.conf import settings
 
 class EmailMessage(Document):
     """
@@ -17,7 +18,7 @@ class EmailMessage(Document):
 
     @classmethod
     def all_messages(cls):
-        r = cls.view('django_couchdb_utils/emails', include_docs=True)
+        r = cls.view('%s/emails' % settings.COUCHDB_UTILS_EMAIL_DB, include_docs=True)
         return list(r)
 
     def __repr__(self):

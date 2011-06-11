@@ -1,6 +1,9 @@
 from datetime import datetime
 from couchdbkit.ext.django.schema import *
 from django.contrib.auth.models import get_hexdigest, check_password, UNUSABLE_PASSWORD
+from django.core.mail import send_mail
+from django.conf import settings
+import random
 
 class User(Document):
     username      = StringProperty(required=True)
@@ -50,7 +53,6 @@ class User(Document):
         return True
 
     def set_password(self, raw_password):
-        import random
         algo = 'sha1'
         salt = get_hexdigest(algo, str(random.random()), str(random.random()))[:5]
         hsh = get_hexdigest(algo, salt, raw_password)
@@ -72,7 +74,6 @@ class User(Document):
 
     def email_user(self, subject, message, from_email=None):
         "Sends an e-mail to this User."
-        from django.core.mail import send_mail
         send_mail(subject, message, from_email, [self.email])
 
     def get_and_delete_messages(self):
@@ -86,7 +87,7 @@ class User(Document):
         else:
             param = dict(key=[username, is_active])
 
-        r = cls.view('django_couchdb_utils/users_by_username', include_docs=True, **param)
+        r = cls.view('%s/users_by_username' % settings.COUCHDB_UTILS_AUTH_DB, include_docs=True, **param)
         return r.first() if r else None
 
     @classmethod
@@ -96,9 +97,9 @@ class User(Document):
         else:
             param = dict(key=[email, is_active])
 
-        r = cls.view('django_couchdb_utils/users_by_email', include_docs=True, **param)
+        r = cls.view('%s/users_by_email' % settings.COUCHDB_UTILS_AUTH_DB, include_docs=True, **param)
         return r.first() if r else None
 
     @classmethod
     def all_users(cls):
-        return cls.view('django_couchdb_utils/users_by_username', include_docs=True).iterator()
+        return cls.view('%s/users_by_username' % settings.COUCHDB_UTILS_AUTH_DB, include_docs=True).iterator()
