@@ -31,9 +31,7 @@ class User(Document):
     def save(self):
         if not self.check_username():
             raise Exception('This username is already in use')
-
-        super(User, self).save()
-
+        return super(User, self).save()
 
     def check_username(self):
         u = User.get_user(self.username, is_active=None)
