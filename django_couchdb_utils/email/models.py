@@ -16,9 +16,13 @@ class EmailMessage(Document):
 #   attachments = blobs/attachments ?
     headers     = DictProperty()
 
+    class Meta:
+        app_label = "django_couchdb_utils_email"
+
     @classmethod
     def all_messages(cls):
-        r = cls.view('%s/emails' % settings.COUCHDB_UTILS_EMAIL_DB, include_docs=True)
+        dbname = cls.get_db().dbname
+        r = cls.view('%s/emails' % dbname, include_docs=True)
         return list(r)
 
     def __repr__(self):
