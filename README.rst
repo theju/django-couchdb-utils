@@ -36,20 +36,20 @@ General Instructions
     ...
     "django_couchdb_utils.auth",
     "django_couchdb_utils.sessions",
+    "django_couchdb_utils.cache",
     ...
-
-  These apps must be placed before their respective default contrib apps in the ``INSTALLED_APPS`` for
-  the correct calculation of the ``app_label``.
 
 * To the ``COUCHDB_DATABASES`` (which is used by Couchdbkit) add the couchdb utils apps that you plan to use::
 
-    ('django_couchdb_utils.auth', 'http://127.0.0.1:5984/somedb'),
+    ('django_couchdb_utils_auth',     'http://127.0.0.1:5984/authdb'),
+    ('django_couchdb_utils_sessions', 'http://127.0.0.1:5984/sessionsdb'),
+    ('django_couchdb_utils_cache',    'http://127.0.0.1:5984/cachedb'),
     ...
 
   If your do not use Couchdbkit otherwise, just add the following to your ``settings.py``::
 
     COUCHDB_DATABASES = (
-      ('django_couchdb_utils.auth', 'http://127.0.0.1:5984/somedb'),
+      ('django_couchdb_utils_auth', 'http://127.0.0.1:5984/somedb'),
       ...
     )
 
@@ -62,11 +62,11 @@ General Instructions
 
 * To enable cache support add the ``CACHE_BACKEND`` attribute in ``settings.py`` like::
 
-      CACHE_BACKEND = "django_couchdb_utils.cache...."
+      CACHE_BACKEND = "cache.couch://"
 
 * To enable sessions support add the ``SESSION_ENGINE`` attribute in ``settings.py`` like::
 
-      SESSION_ENGINE = "django_couchdb_utils.sessions"
+      SESSION_ENGINE = "django_couchdb_utils.sessions.couchdb"
 
 * To enable the CouchDB email caching backend, set the ``EMAIL_BACKEND`` attribute in ``settings.py`` like::
 
