@@ -1,4 +1,4 @@
-from auth.models import User
+from django_couchdb_utils.auth.models import User
 from datetime import datetime
 from django.http import Http404
 from django_openid import signed
