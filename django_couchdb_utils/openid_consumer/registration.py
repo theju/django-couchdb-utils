@@ -5,14 +5,14 @@ from django_openid import signed
 from django.conf import settings
 from .openid_consumer.consumer import AuthConsumer
 from .openid_consumer.forms import RegistrationFormPasswordConfirm
-from .openid_consumer.models import server_uri, DB_PREFIX, get_values, get_or_create
+from .openid_consumer.models import UserOpenidAssociation
 from django_openid.registration import RegistrationConsumer as DjangoOpenIDRegistrationConsumer
 
 class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
     RegistrationForm   = RegistrationFormPasswordConfirm
 
     def user_is_unconfirmed(self, user):
-        return len(get_values(self.auth_db.view('auth_is_active/all', key=[user['_id'], False])))
+        return len(self.auth_db.view('auth_is_active/all', key=[user['_id'], False]))
 
     def mark_user_confirmed(self, user):
         user.is_active = True
@@ -32,7 +32,6 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         user.store(self.auth_db)
         # Set OpenID, if one has been associated
         if openid:
-            from openid_consumer.models import UserOpenidAssociation
             temp_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, 'user_openid'))
             uoa = UserOpenidAssociation(user_id = user.id, 
                                         openid  = openid, 
@@ -53,7 +52,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
             return ''
         original_nickname = nickname
         suffix = None
-        while len(self.auth_db.view('auth_id/all', key=nickname).rows):
+        while len(self.auth_db.view('auth_id/all', key=nickname)):
             if suffix is None:
                 suffix = 1
             else:
