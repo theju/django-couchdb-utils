@@ -3,9 +3,9 @@ from datetime import datetime
 from django.http import Http404
 from django_openid import signed
 from django.conf import settings
-from .openid_consumer.consumer import AuthConsumer
-from .openid_consumer.forms import RegistrationFormPasswordConfirm
-from .openid_consumer.models import UserOpenidAssociation
+from .consumer import AuthConsumer
+from .forms import RegistrationFormPasswordConfirm
+from .models import UserOpenidAssociation
 from django_openid.registration import RegistrationConsumer as DjangoOpenIDRegistrationConsumer
 
 class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):

@@ -1,16 +1,12 @@
 from django import forms
-from auth.models import User, DB_PREFIX
-from openid_consumer.models import server_uri, get_or_create, get_values
+from django_couchdb_utils.auth.models import User
 from django_openid.forms import RegistrationForm as DjangoOpenidRegistrationForm, \
                                 RegistrationFormPasswordConfirm as DjangoOpenidRegistrationFormPasswordConfirm
 
 class RegistrationForm(DjangoOpenidRegistrationForm):
     def __init__(self, *args, **kwargs):
         super(RegistrationForm, self).__init__(*args, **kwargs)
-        self.auth_db = get_or_create(server_uri, "%s%s" %(DB_PREFIX, "auth"))
-        User.id_view.sync(self.auth_db)
-        User.email_view.sync(self.auth_db)
-        User.is_active_view.sync(self.auth_db)
+        self.auth_db = User.get_db()
 
     def save(self):
         user = User(**self.cleaned_data)
@@ -18,7 +14,7 @@ class RegistrationForm(DjangoOpenidRegistrationForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '')
-        if self.no_duplicate_emails and len(get_values(self.auth_db.view('auth_email/all', key = email))) > 0:
+        if self.no_duplicate_emails and len(self.auth_db.view('auth_email/all', key = email)) > 0:
             raise forms.ValidationError, self.duplicate_email_error
         return email
 
