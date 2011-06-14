@@ -15,7 +15,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
     def user_is_unconfirmed(self, user):
         try:
             count = User.view('%s/users_by_username' % User._meta.app_label, 
-                              key=user.username).count()
+                              key=user.username, include_docs=True).count()
             if count:
                 return True
             return False
@@ -122,7 +122,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         if self.user_is_unconfirmed(user):
             # Confirm them
             try:
-                user = User.view('%s/users_by_username' % User._meta.app_label, key=user.username).first()
+                user = User.view('%s/users_by_username' % User._meta.app_label, key=user.username, include_docs=True).first()
             except ResourceNotFound:
                 user = None
             if user:

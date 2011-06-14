@@ -114,19 +114,19 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
         except (IndexError, ResourceNotFound):
             return []
         try:
-            return User.view('%s/users_by_username', key=openid['user_id']).first()
+            return User.view('%s/users_by_username', key=openid['user_id'], include_docs=True).first()
         except ResourceNotFound:
             return []
 
     def lookup_users_by_email(self, email):
         try:
-            return User.view('%s/users_by_email' % User._meta.app_label, key=email).first()
+            return User.view('%s/users_by_email' % User._meta.app_label, key=email, include_docs=True).first()
         except ResourceNotFound:
             return []
 
     def lookup_user_by_username(self, username):
         try:
-            return User.view('%s/users_by_username' % User._meta.app_label, key=username).first()
+            return User.view('%s/users_by_username' % User._meta.app_label, key=username, include_docs=True).first()
         except (IndexError, ResourceNotFound):
             return []
 
