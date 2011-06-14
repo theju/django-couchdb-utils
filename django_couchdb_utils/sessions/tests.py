@@ -1,7 +1,7 @@
 r"""
 
 >>> from django.conf import settings
->>> from sessions.couchdb_session import SessionStore as CouchDBSession
+>>> from django_couchdb_utils.sessions.couchdb import SessionStore as CouchDBSession
 >>> from django.contrib.sessions.backends.base import SessionBase
 
 >>> session = CouchDBSession()
