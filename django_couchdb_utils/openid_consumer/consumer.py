@@ -11,6 +11,7 @@ from django_openid.consumer import Consumer as DjangoOpenidConsumer, \
 from .models import DjangoCouchDBOpenIDStore, UserOpenidAssociation
 from django_couchdb_utils.auth.models import User
 from django.contrib.auth import login
+from couchdbkit.exceptions import ResourceNotFound
 
 class Consumer(DjangoOpenidConsumer):
     def get_consumer(self, request, session_store):
