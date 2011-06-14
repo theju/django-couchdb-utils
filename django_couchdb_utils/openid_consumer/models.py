@@ -78,11 +78,13 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
         return associations[-1][1]
 
     def removeAssociation(self, server_url, handle):
-        assocs = self.assoc_db.view('url_handle_view/all', key=[server_url, handle])
-        assocs_exist = len(assocs) > 0
+        try:
+            assocs = self.assoc_db.view('url_handle_view/all', key=[server_url, handle]).all()
+        except ResourceNotFound:
+            assocs = []
         for assoc in assocs:
             self.assoc_db.delete(assoc)
-        return assocs_exist
+        return len(assocs)
 
     def useNonce(self, server_url, timestamp, salt):
         # Has nonce expired?
@@ -91,7 +93,7 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
         try:
             nonce = self.nonce_db.view('url_timestamp_salt_view/all', 
                                        key=[server_url, timestamp, salt]).first()
-        except IndexError:
+        except (IndexError, ResourceNotFound):
             nonce = Nonce(
                 server_url = server_url,
                 timestamp = timestamp,
