@@ -1,4 +1,5 @@
 from couchdbkit.ext.django.schema import *
+from couchdbkit.exceptions import ResourceNotFound
 
 class Session(Document):
     session_key  = StringProperty()
@@ -12,4 +13,7 @@ class Session(Document):
     def get_session(cls, session_key):
         dbname = cls.get_db().dbname
         r = cls.view('%s/sessions_by_key' % dbname, key=session_key, include_docs=True)
-        return r.first() if r else None
+        try:
+            return r.first()
+        except ResourceNotFound:
+            return None

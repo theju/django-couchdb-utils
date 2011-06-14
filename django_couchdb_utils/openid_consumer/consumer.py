@@ -54,7 +54,7 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
                                             openid  = openid, 
                                             created = datetime.datetime.now())
                 uoa["temp"] = True
-                uoa.store(temp_db)
+                uoa.store()
             return self.show_associate_done(request, openid)
 
         return self.show_error(request, 'Should POST to here')
@@ -110,7 +110,7 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
         temp_db = UserOpenidAssociation.get_db()
         try:
             openid = temp_db.view('openid_view/all', key=identity_url).first()
-        except IndexError:
+        except (IndexError, ResourceNotFound):
             return []
         return [User.load(self.auth_db, openid['user_id']),]
 

@@ -4,6 +4,7 @@ import time, base64, openid.store, urlparse
 from django_openid.models import DjangoOpenIDStore
 from django.utils.hashcompat import md5_constructor
 from openid.association import Association as OIDAssociation
+from couchdbkit.exceptions import ResourceNotFound
 
 class UserOpenidAssociation(Document):
     user_id = StringProperty()
@@ -50,7 +51,7 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
             lifetime = association.issued,
             assoc_type = association.assoc_type
         )
-        assoc.store(self.assoc_db)
+        assoc.store()
 
     def getAssociation(self, server_url, handle=None):
         assocs = []
@@ -58,18 +59,20 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
             assocs = self.assoc_db.view('url_handle_view/all', key=[server_url, handle])
         else:
             assocs = self.assoc_db.view('url_view/all', key=server_url)
-        if not assocs:
-            return None
+        assocs = assocs.iterator()
         associations = []
-        for assoc in assocs:
-            association = OIDAssociation(
-                assoc['handle'], base64.decodestring(assoc['secret']), assoc['issued'],
-                assoc['lifetime'], assoc['assoc_type']
-            )
-            if association.getExpiresIn() == 0:
-                self.removeAssociation(server_url, assoc.handle)
-            else:
-                associations.append((association.issued, association))
+        try:
+            for assoc in assocs:
+                association = OIDAssociation(
+                    assoc['handle'], base64.decodestring(assoc['secret']), assoc['issued'],
+                    assoc['lifetime'], assoc['assoc_type']
+                    )
+                if association.getExpiresIn() == 0:
+                    self.removeAssociation(server_url, assoc.handle)
+                else:
+                    associations.append((association.issued, association))
+        except ResourceNotFound:
+            pass
         if not associations:
             return None
         return associations[-1][1]
@@ -94,7 +97,7 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
                 timestamp = timestamp,
                 salt = salt
             )
-            nonce.store(self.nonce_db)
+            nonce.store()
             return True
         self.nonce_db.delete(nonce)
         return False
