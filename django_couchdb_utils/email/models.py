@@ -1,4 +1,5 @@
 from couchdbkit.ext.django.schema import *
+from couchdbkit.exceptions import ResourceNotFound
 from django.conf import settings
 
 class EmailMessage(Document):
@@ -21,9 +22,11 @@ class EmailMessage(Document):
 
     @classmethod
     def all_messages(cls):
-        dbname = cls.get_db().dbname
-        r = cls.view('%s/emails' % dbname, include_docs=True)
-        return list(r)
+        r = cls.view('%s/emails' % cls._meta.app_label, include_docs=True).iterator()
+        try:
+            return list(r)
+        except ResourceNotFound:
+            return []
 
     def __repr__(self):
         return 'EmailMessage (%s)' % self._id
