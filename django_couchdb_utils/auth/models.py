@@ -1,5 +1,6 @@
 from datetime import datetime
 from couchdbkit.ext.django.schema import *
+from couchdbkit.exceptions import ResourceNotFound
 from django.contrib.auth.models import get_hexdigest, check_password, UNUSABLE_PASSWORD
 from django.core.mail import send_mail
 import random
@@ -87,9 +88,11 @@ class User(Document):
         else:
             param = dict(key=[username, is_active])
 
-        dbname = cls.get_db().dbname
-        r = cls.view('%s/users_by_username' % dbname, include_docs=True, **param)
-        return r.first() if r else None
+        r = cls.view('%s/users_by_username' % cls._meta.app_label, include_docs=True, **param)
+        try:
+            return r.first()
+        except ResourceNotFound:
+            return None
 
     @classmethod
     def get_user_by_email(cls, email, is_active=True):
@@ -98,11 +101,17 @@ class User(Document):
         else:
             param = dict(key=[email, is_active])
 
-        dbname = cls.get_db().dbname
-        r = cls.view('%s/users_by_email' % dbname, include_docs=True, **param)
-        return r.first() if r else None
+        r = cls.view('%s/users_by_email' % cls._meta.app_label, include_docs=True, **param)
+        try:
+            return r.first()
+        except ResourceNotFound:
+            return None
 
     @classmethod
     def all_users(cls):
-        dbname = cls.get_db().dbname
-        return cls.view('%s/users_by_username' % dbname, include_docs=True).iterator()
+        view = cls.view('%s/users_by_username' % cls._meta.app_label, include_docs=True)
+        try:
+            view.count()
+            return view.iterator()
+        except ResourceNotFound:
+            return []
