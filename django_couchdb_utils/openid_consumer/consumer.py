@@ -116,7 +116,7 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
         try:
             return User.view('%s/users_by_username', key=openid['user_id']).first()
         except ResourceNotFound:
-            return None
+            return []
 
     def lookup_users_by_email(self, email):
         try:
