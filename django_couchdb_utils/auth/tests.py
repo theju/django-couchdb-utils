@@ -1,6 +1,8 @@
 BASIC_TESTS = """
->>> from auth.models import User
->>> u = User(id='testuser', email='test@example.com', password='testpw')
+>>> from django_couchdb_utils.auth.models import User
+>>> from django.contrib.auth.models import UNUSABLE_PASSWORD
+>>> u = User(username='testuser', email='test@example.com', password='testpw')
+>>> u.set_password('testpw')
 >>> u.save()
 >>> u.has_usable_password()
 True
@@ -9,11 +11,10 @@ False
 >>> u.check_password('testpw')
 True
 >>> u.set_unusable_password()
->>> u.check_password('testpw')
-False
 >>> u.has_usable_password()
 False
->>> u2 = User(id='testuser2', email='test2@example.com')
+>>> u2 = User(username='testuser2', email='test2@example.com')
+>>> u2.password = UNUSABLE_PASSWORD
 >>> u2.save()
 >>> u2.has_usable_password()
 False
