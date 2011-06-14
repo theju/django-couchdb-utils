@@ -1,3 +1,5 @@
 function(doc) {
-  emit(doc.timestamp, doc);
+    if (doc.doc_type == 'Nonce') {
+	emit(doc.timestamp, doc);
+    }
 }

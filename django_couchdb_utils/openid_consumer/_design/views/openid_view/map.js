@@ -1,3 +1,5 @@
 function(doc) {
-  emit(doc.openid, doc);
+    if (doc.doc_type == 'UserOpenidAssociation') {
+      emit(doc.openid, doc);
+    }
 }

@@ -1,3 +1,5 @@
 function(doc) {
-  emit(doc.server_url, doc);
+    if (doc.doc_type == 'Nonce') {
+	emit(doc.server_url, doc);
+    }
 }

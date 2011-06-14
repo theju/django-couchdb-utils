@@ -1,3 +1,5 @@
 function(doc) {
-  emit(doc.issued + doc.lifetime, doc);
+    if (doc.doc_type == 'Association') {
+	emit(doc.issued + doc.lifetime, doc);
+    }
 }
