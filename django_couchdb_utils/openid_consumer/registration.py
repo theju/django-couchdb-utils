@@ -15,7 +15,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
     def user_is_unconfirmed(self, user):
         try:
             count = User.view('%s/users_by_username' % User._meta.app_label, 
-                              key=[user['username'], False]).count()
+                              key=user.username).count()
             if count:
                 return True
             return False
