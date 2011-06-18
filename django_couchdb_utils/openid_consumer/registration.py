@@ -13,14 +13,15 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
     RegistrationForm   = RegistrationFormPasswordConfirm
 
     def user_is_unconfirmed(self, user):
+        count = 0
         try:
             count = User.view('%s/users_by_username' % User._meta.app_label, 
                               key=user.username, include_docs=True).count()
-            if count:
-                return True
-            return False
         except ResourceNotFound:
             return False
+        if count:
+            return True
+        return False
 
     def mark_user_confirmed(self, user):
         user.is_active = True
@@ -28,7 +29,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
 
     def mark_user_unconfirmed(self, user):
         user.is_active = False
-        user.store()
+        return user.store()
 
     def create_user(self, request, data, openid=None):
         user = User(
