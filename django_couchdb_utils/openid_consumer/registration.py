@@ -62,7 +62,8 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         username_exists = True
         while username_exists:
             try:
-                username_exists = User.view('%s/users_by_username' % User._meta.app_label, key=nickname).count()
+                username_exists = User.view('%s/users_by_username' % User._meta.app_label, 
+                                            key=nickname, include_docs=True).count()
             except ResourceNotFound:
                 username_exists = False
             if not username_exists:
@@ -89,7 +90,7 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
             if form.is_valid():
                 u = request.user
                 u.set_password(form.cleaned_data['password'])
-                u.store(self.auth_db)
+                u.store()
                 return self.show_password_has_been_set(request)
         else:
             form = ChangePasswordForm(request.user)
@@ -122,7 +123,8 @@ class RegistrationConsumer(AuthConsumer, DjangoOpenIDRegistrationConsumer):
         if self.user_is_unconfirmed(user):
             # Confirm them
             try:
-                user = User.view('%s/users_by_username' % User._meta.app_label, key=user.username, include_docs=True).first()
+                user = User.view('%s/users_by_username' % User._meta.app_label, 
+                                 key=user.username, include_docs=True).first()
             except ResourceNotFound:
                 user = None
             if user:

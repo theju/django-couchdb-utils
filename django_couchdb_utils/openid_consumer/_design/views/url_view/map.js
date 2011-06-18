@@ -1,5 +1,5 @@
 function(doc) {
-    if (doc.doc_type == 'Nonce') {
+    if (doc.doc_type == 'Association') {
 	emit(doc.server_url, doc);
     }
 }

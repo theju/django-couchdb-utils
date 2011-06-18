@@ -27,10 +27,6 @@ class CookieConsumer(LoginConsumer, DjangoOpenidCookieConsumer):
     pass
 
 class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
-    def __init__(self):
-        self.auth_db = User.get_db()
-        super(AuthConsumer, self).__init__()
-
     def user_can_login(self, request, user):
         "Over-ride for things like user bans or account e-mail validation"
         return user.is_active
@@ -49,8 +45,8 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
             except signed.BadSignature:
                 return self.show_error(request, self.csrf_failed_message)
             # Associate openid with their account, if it isn't already
-            temp_db = UserOpenidAssociation.get_db()
-            if not len(temp_db.view('openid_view/all', key = openid)):
+            if not len(UserOpenidAssociation.view('%s/openid_view' % UserOpenidAssociation._meta.app_label, 
+                                                  key = openid), include_docs=True):
                 uoa = UserOpenidAssociation(user_id = request.user.id, 
                                             openid  = openid, 
                                             created = datetime.datetime.now())
@@ -65,7 +61,6 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
         if not request.user.is_authenticated():
             return self.need_authenticated_user(request)
         message = None
-        temp_db = UserOpenidAssociation.get_db()
         if request.method == 'POST':
             if 'todelete' in request.POST:
                 # Something needs deleting; find out what
@@ -78,9 +73,10 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
                         message = self.associate_tampering_message
                     else:
                         # It matches! Delete the OpenID relationship
-                        row = temp_db.view('openid_view/all', key=todelete['openid']).first()
+                        row = UserOpenidAssociation.view('%s/openid_view' % UserOpenidAssociation._meta.app_label, 
+                                                         key=todelete['openid'], include_docs=True).first()
                         if row.temp == True:
-                            temp_db.delete(row)
+                            row.delete()
                             message = self.association_deleted_message % (
                                 todelete['openid']
                                 )
@@ -88,7 +84,8 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
                     message = self.associate_tampering_message
         # We construct a button to delete each existing association
         openids = []
-        for association in temp_db.view('openid_view/all'):
+        for association in UserOpenidAssociation.view('%s/openid_view' % UserOpenidAssociation._meta.app_label, 
+                                                      include_docs=True):
             openids.append({
                 'openid': association['openid'],
                 'button': signed.dumps({
@@ -108,25 +105,28 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
 
 
     def lookup_openid(self, request, identity_url):
-        temp_db = UserOpenidAssociation.get_db()
         try:
-            openid = temp_db.view('openid_view/all', key=identity_url).first()
+            openid = UserOpenidAssociation.view('%s/openid_view' % UserOpenidAssociation._meta.app_label, 
+                                                key=identity_url, include_docs=True).first()
         except (IndexError, ResourceNotFound):
             return []
         try:
-            return User.view('%s/users_by_username', key=openid['user_id'], include_docs=True).first()
+            return User.view('%s/users_by_username', key=openid['user_id'], 
+                             include_docs=True).first()
         except ResourceNotFound:
             return []
 
     def lookup_users_by_email(self, email):
         try:
-            return User.view('%s/users_by_email' % User._meta.app_label, key=email, include_docs=True).first()
+            return User.view('%s/users_by_email' % User._meta.app_label, 
+                             key=email, include_docs=True).first()
         except ResourceNotFound:
             return []
 
     def lookup_user_by_username(self, username):
         try:
-            return User.view('%s/users_by_username' % User._meta.app_label, key=username, include_docs=True).first()
+            return User.view('%s/users_by_username' % User._meta.app_label, 
+                             key=username, include_docs=True).first()
         except (IndexError, ResourceNotFound):
             return []
 

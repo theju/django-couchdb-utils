@@ -34,14 +34,6 @@ class Association(Document):
         app_label = "django_couchdb_utils_openid_consumer"
 
 class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
-    def __init__(self):
-        # This constructor argument is specific only to
-        # the couchdb store. It accepts a couchdb db 
-        # instance
-        self.nonce_db = Nonce.get_db()
-        self.assoc_db = Association.get_db()
-        self.user_openid_db = UserOpenidAssociation.get_db()
-
     def storeAssociation(self, server_url, association):
         assoc = Association(
             server_url = server_url,
@@ -56,10 +48,11 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
     def getAssociation(self, server_url, handle=None):
         assocs = []
         if handle is not None:
-            assocs = self.assoc_db.view('url_handle_view/all', key=[server_url, handle])
+            assocs = Association.view('%s/url_handle_view' % Association._meta.app_label, 
+                                      key=[server_url, handle], include_docs=True).all()
         else:
-            assocs = self.assoc_db.view('url_view/all', key=server_url)
-        assocs = assocs.iterator()
+            assocs = Association.view('%s/url_view' % Association._meta.app_label, 
+                                        key=server_url, include_docs=True).all()
         associations = []
         try:
             for assoc in assocs:
@@ -79,11 +72,12 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
 
     def removeAssociation(self, server_url, handle):
         try:
-            assocs = self.assoc_db.view('url_handle_view/all', key=[server_url, handle]).all()
+            assocs = Association.view('%s/url_handle_view' % Association._meta.app_label, 
+                                      key=[server_url, handle], include_docs=True).all()
         except ResourceNotFound:
             assocs = []
         for assoc in assocs:
-            self.assoc_db.delete(assoc)
+            assoc.delete()
         return len(assocs)
 
     def useNonce(self, server_url, timestamp, salt):
@@ -91,8 +85,8 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
         if abs(timestamp - time.time()) > openid.store.nonce.SKEW:
             return False
         try:
-            nonce = self.nonce_db.view('url_timestamp_salt_view/all', 
-                                       key=[server_url, timestamp, salt]).first()
+            nonce = Nonce.view('%s/url_timestamp_salt_view' % Nonce._meta.app_label, 
+                               key=[server_url, timestamp, salt], include_docs=True).first()
         except (IndexError, ResourceNotFound):
             nonce = Nonce(
                 server_url = server_url,
@@ -101,16 +95,18 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
             )
             nonce.store()
             return True
-        self.nonce_db.delete(nonce)
+        nonce.delete()
         return False
 
     def cleanupNonce(self):
         max_key_val = time.time() - openid.store.nonce.SKEW
-        nonces = self.nonce_db.view('timestamp_view/all', endkey=max_key_val)
+        nonces = Nonce.view('%s/timestamp_view' % Nonce._meta.app_label, 
+                            endkey=max_key_val, include_docs=True)
         for nonce in nonces:
-            self.nonce_db.delete(nonce)
+            nonce.delete()
 
     def cleaupAssociations(self):
-        assocs = self.assoc_db.view('issued_lifetime_view/all', endkey=time.time())
+        assocs = Association.view('%s/issued_lifetime_view' % Association._meta.app_label, 
+                                   endkey=time.time(), include_docs=True)
         for assoc in assocs:
-            self.assoc_db.delete(assoc)
+            assoc.delete()
