@@ -108,8 +108,8 @@ class AuthConsumer(SessionConsumer, DjangoOpenidAuthConsumer):
         openid = UserOpenidAssociation.view('%s/openid_view' % UserOpenidAssociation._meta.app_label, 
                                             key=identity_url, include_docs=True).first()
         if openid:
-            return User.view('%s/users_by_username', key=openid['user_id'], 
-                             include_docs=True).first()
+            return User.view('%s/users_by_username' % User._meta.app_label, 
+                             key=openid['user_id'], include_docs=True).first()
 
     def lookup_users_by_email(self, email):
         return User.view('%s/users_by_email' % User._meta.app_label, 
