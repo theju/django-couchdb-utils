@@ -84,10 +84,9 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
         # Has nonce expired?
         if abs(timestamp - time.time()) > openid.store.nonce.SKEW:
             return False
-        try:
-            nonce = Nonce.view('%s/url_timestamp_salt_view' % Nonce._meta.app_label, 
-                               key=[server_url, timestamp, salt], include_docs=True).first()
-        except (IndexError, ResourceNotFound):
+        nonce = Nonce.view('%s/url_timestamp_salt_view' % Nonce._meta.app_label, 
+                           key=[server_url, timestamp, salt], include_docs=True).first()
+        if not nonce:
             nonce = Nonce(
                 server_url = server_url,
                 timestamp = timestamp,
@@ -95,7 +94,8 @@ class DjangoCouchDBOpenIDStore(DjangoOpenIDStore):
             )
             nonce.store()
             return True
-        nonce.delete()
+        if nonce:
+            nonce.delete()
         return False
 
     def cleanupNonce(self):
