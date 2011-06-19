@@ -91,29 +91,24 @@ class User(Document):
 
     @classmethod
     def get_user(cls, username, is_active=True):
-        if is_active is None:
-            param = dict(startkey=[username, False], endkey=[username, True])
-        else:
-            param = dict(key=[username, is_active])
+        param = {"key": username}
 
-        r = cls.view('%s/users_by_username' % cls._meta.app_label, include_docs=True, **param)
-        try:
-            return r.first()
-        except ResourceNotFound:
-            return None
+        r = cls.view('%s/users_by_username' % cls._meta.app_label, 
+                     include_docs=True, 
+                     **param).first()
+        if r and r.is_active:
+            return r
+        return None
 
     @classmethod
     def get_user_by_email(cls, email, is_active=True):
-        if is_active is None:
-            param = dict(startkey=[email, False], endkey=[email, True])
-        else:
-            param = dict(key=[email, is_active])
+        param = {"key": email}
 
-        r = cls.view('%s/users_by_email' % cls._meta.app_label, include_docs=True, **param)
-        try:
-            return r.first()
-        except ResourceNotFound:
-            return None
+        r = cls.view('%s/users_by_email' % cls._meta.app_label, 
+                     include_docs=True, **param).first()
+        if r and r.is_active:
+            return r
+        return None
 
     @classmethod
     def all_users(cls):
