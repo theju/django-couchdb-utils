@@ -4,7 +4,7 @@ from couchdbkit.exceptions import ResourceNotFound
 class Session(Document):
     session_key  = StringProperty()
     session_data = StringProperty()
-    expire_date  = StringProperty()
+    expire_date  = DateTimeProperty()
 
     class Meta:
         app_label = "django_couchdb_utils_sessions"

@@ -34,12 +34,12 @@ class SessionStore(SessionBase):
             session = Session()
             session.key = self.session_key
             session.session_data = self.encode(self._get_session(no_load=must_create))
-            session.expire_date = self.get_expiry_date().strftime('%Y-%m-%dT%H:%M:%SZ')
+            session.expire_date = self.get_expiry_date()
         else:
             if not session:
                 return None
             session.session_data = self.encode(self._get_session(no_load=must_create))
-            session.expire_date = self.get_expiry_date().strftime('%Y-%m-%dT%H:%M:%SZ')
+            session.expire_date = self.get_expiry_date()
         session.save()
 
     def exists(self, session_key):
