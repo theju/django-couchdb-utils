@@ -31,12 +31,20 @@ class User(Document):
 
     def save(self):
         if not self.check_username():
-            raise Exception('This username is already in use')
+            raise Exception('This username is already in use.')
+        if not self.check_email():
+            raise Exception('This email address is already in use.')
         return super(User, self).save()
 
     def check_username(self):
         u = User.get_user(self.username, is_active=None)
-        if self._id is None or u is None:
+        if u is None:
+            return True
+        return u._id == self._id
+
+    def check_email(self):
+        u = User.get_user_by_email(self.email, is_active=None)
+        if u is None:
             return True
         return u._id == self._id
 
